@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Emerging Technologies MNIST Application</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="row">
+        <div class="col-xs-12">
+
+            <div class="card mx-auto mt-3 p-3" style="height: 570px;">
+                <div>
+                    <h1 class="card-title">Draw a Number between 0 - 9</h1>
+                    <hr>
+
+                    <div>
+                        <canvas id="canvas" width="250" height="250" style="border: 10px solid black;"></canvas>
+                    </div>
+
+                    <hr>
+
+                    <div>
+                        <button class="btn btn-success" type="button" onclick="canvasImage()">
+                            Save Canvas
+                        </button>
+                        <button style="margin-left: 5px;" class="btn btn-danger" type="button" onclick="clearCanvas()">
+                            Clear Canvas
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+           
+        </div>
+        <div>
+
+            <div id="predict" class="text-center">
+                <h1>Your Number:</h1>
+                <h1 id="prediction"></h1>
+            </div>
+            
+        </div>
+        
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script type = "text/javascript">
+
+        // Canvas Code from: 
+        // https://www.youtube.com/watch?v=3GqUM4mEYKA&t=807s
+        // https://www.youtube.com/watch?v=m4sioSqlXhQ&list=PLfdtiltiRHWHfOVfqI89Nc3xUMY-q-7f0  
+        
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext("2d");
+   
+        canvas.height = window.innerHeight / 2;
+        canvas.width = window.innerWidth / 2;
+
+        // https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
+        var rect = canvas.getBoundingClientRect();
+        var painting = false;
+        var radius = 10;
+
+        ctx.lineWidth = radius * 2;
+
+        function startPosition(e) {
+            painting = true;
+            paint(e);
+        }
+
+        function finishPosition() {
+            painting = false;
+            ctx.beginPath();
+        }
+
+        function paint(e) {
+            if (painting) {
+                ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(e.clientX - rect.left, e.clientY - rect.top, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+            }
+
+        }
+
+        // Event Listeners
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', finishPosition);
+        canvas.addEventListener('mousemove', paint);
+
+        // Clear canvas
+        function clearCanvas() {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL
+        // https://www.geeksforgeeks.org/how-to-save-an-html-5-canvas-as-an-image-on-the-server/ 
+        function canvasImage() {
+            var canvas = document.getElementById('canvas');
+            var dataURL = canvas.toDataURL();
+           
+            $.ajax({
+                type: 'POST',
+                url: '/predict',
+                data: {
+                    imgBase64: dataURL
+                }
+            }).done(function (data) {
+                $("#prediction").empty().append(data);
+            });
+        };
+
+        
+    </script>
+</body>
+
+</html>
